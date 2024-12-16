@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Estadísticas Personalizadas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            background: #f7f7f7;
+            color: #333;
+        }
+        header {
+            background: #4CAF50;
+            color: #fff;
+            padding: 20px; 
+            text-align: center;
+        }
+        main {
+            padding: 20px;
+        }
+        .form-section {
+            background: #fff;
+            border: 1px solid #ddd; 
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .form-section h2 {
+            margin-top: 0; 
+            font-size: 18px;
+        }
+        .form-group {
+            margin-bottom: 15px; 
+            display: flex; 
+            flex-direction: column;
+        }
+        .form-group label {
+            font-weight: bold;
+            margin-bottom: 5px; 
+        }
+        .form-group input {
+            padding: 8px; 
+            border: 1px solid #ccc; 
+            border-radius: 3px;
+        }
+        .form-section button {
+            background: #4CAF50; 
+            color: #fff; 
+            border: none; 
+            padding: 10px 15px;
+            border-radius: 3px; 
+            cursor: pointer;
+        }
+        .form-section button:hover {
+            background: #45a049;
+        }
+        .result-section {
+            background: #fff;
+            border: 1px solid #ddd; 
+            border-radius: 5px;
+            padding: 20px;
+        }
+        .result-section img {
+            max-width: 100%; 
+            border: 1px solid #ccc; 
+            border-radius: 5px;
+        }
+        .result-section h2 {
+            margin-top: 0; 
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        .info {
+            margin-bottom: 10px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Estadísticas Personalizadas</h1>
+    </header>
+    <main>
+        <div class="form-section">
+            <h2>Crear o Actualizar Estadística</h2>
+            <p class="info">Elige un nombre para tu estadística (por ejemplo, "peso", "ventas", "temperatura"), y agrega etiquetas y valores.</p>
+            <div class="form-group">
+                <label for="stat_name">Nombre de la Estadística</label>
+                <input id="stat_name" placeholder="Ejemplo: peso, ventas, temperatura..." type="text">
+            </div>
+            <div class="form-group">
+                <label for="etiqueta">Etiqueta</label>
+                <input id="etiqueta" placeholder="Etiqueta (ej: día 1, semana 2)" type="text">
+            </div>
+            <div class="form-group">
+                <label for="valor">Valor</label>
+                <input id="valor" placeholder="Valor numérico" type="text">
+            </div>
+            <button id="enviar">Enviar</button>
+        </div>
+
+        <div class="result-section">
+            <h2>Gráfico</h2>
+            <p class="info">El gráfico correspondiente a la estadística seleccionada se mostrará aquí.</p>
+            <img id="stat_image" src="" alt="Gráfico de la estadística">
+        </div>
+    </main>
+
+    <script>
+        document.querySelector("#enviar").onclick = function() {
+            let stat_name = document.querySelector("#stat_name").value.trim();
+            let etiqueta = document.querySelector("#etiqueta").value.trim();
+            let valor = document.querySelector("#valor").value.trim();
+
+            if(!stat_name || !etiqueta || !valor) {
+                alert("Por favor, rellena todos los campos.");
+                return;
+            }
+
+            fetch("http://192.168.1.215:3000/envia?stat_name="+encodeURIComponent(stat_name)+"&etiqueta="+encodeURIComponent(etiqueta)+"&valor="+encodeURIComponent(valor))
+            .then(response => response.json())
+            .then(data => {
+                if(data.error) {
+                    alert("Error: " + data.error);
+                } else {
+                    // Actualizar la imagen después de un breve retardo
+                    setTimeout(function(){
+                        document.querySelector("#stat_image").setAttribute("src", "/static/" + stat_name + ".png?ts=" + new Date().getTime());
+                    }, 500);
+                }
+            })
+            .catch(error => {
+                console.error(error);
+                alert("Hubo un error al enviar los datos.");
+            });
+        }
+    </script>
+</body>
+</html>

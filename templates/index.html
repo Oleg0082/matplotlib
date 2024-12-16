@@ -1,0 +1,23 @@
+<!doctype html>
+<html>
+    <head>
+    </head>
+    <body>
+        <h1>Peso</h1>
+        <img src="{{ url_for('static', filename='peso.png') }}">
+        <input id="etiqueta" placeholder="etiqueta">
+        <input id="valor" placeholder="valor">
+        <button>Enviar</button>
+        <script>
+            document.querySelector("button").onclick = function(){
+                console.log("ok")
+                let etiqueta = document.querySelector("#etiqueta").value
+                let valor = document.querySelector("#valor").value
+                fetch("http://192.168.1.215:3000/envia?etiqueta="+encodeURI(etiqueta)+"&valor="+encodeURI(valor))
+                setTimeout(function(){
+                    document.querySelector("img").setAttribute("src", "/static/peso.png?ts=" + new Date().getTime());
+                }, 1000);
+            }
+        </script>
+    </body>
+</html>

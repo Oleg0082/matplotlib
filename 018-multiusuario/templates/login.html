@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Login</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f7f7f7; margin:0; padding:0; }
+        .container {
+            max-width: 300px; margin: 100px auto; background: #fff; padding:20px; border:1px solid #ddd; border-radius:5px;
+        }
+        h1 { font-size:18px; margin-bottom:20px; }
+        input[type=text], input[type=password] {
+            width: 100%; padding:8px; margin-bottom:10px; border:1px solid #ccc; border-radius:3px;
+        }
+        button {
+            background: #0073aa; color:#fff; border:none; padding:8px 12px; border-radius:3px; cursor:pointer;
+        }
+        button:hover { background:#006799; }
+        .error { color:red; margin-bottom:10px; }
+        .info { margin-top:10px; font-size:14px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Iniciar Sesión</h1>
+    {% if error %}
+    <div class="error">{{ error }}</div>
+    {% endif %}
+    <form method="POST">
+        <input type="text" name="username" placeholder="Usuario">
+        <input type="password" name="password" placeholder="Contraseña">
+        <button type="submit">Login</button>
+    </form>
+    <div class="info">¿No tienes cuenta? <a href="{{ url_for('signup') }}">Regístrate</a></div>
+</div>
+</body>
+</html>

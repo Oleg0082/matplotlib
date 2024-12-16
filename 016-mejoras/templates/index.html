@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Panel de Control de Estadísticas</title>
+    <style>
+        body {
+            margin: 0; 
+            font-family: Arial, sans-serif;
+            background: #f7f7f7;
+            color: #333;
+        }
+
+        header {
+            background: #23282d;
+            color: #fff;
+            padding: 15px;
+            font-size: 18px;
+        }
+
+        .container {
+            display: flex;
+            min-height: calc(100vh - 50px);
+        }
+
+        aside {
+            width: 300px;
+            background: #fafafa;
+            border-right: 1px solid #ddd;
+            padding: 20px;
+        }
+
+        main {
+            flex: 1;
+            padding: 20px;
+        }
+
+        h1, h2, h3 {
+            margin-top: 0;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section h2 {
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input[type="text"], select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc; 
+            border-radius: 3px;
+        }
+
+        button {
+            background: #0073aa;
+            color: #fff;
+            border: none;
+            padding: 8px 12px;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+
+        button:hover {
+            background: #006799;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .chart-card {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .chart-card img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .chart-card h3 {
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .info {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            aside {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #ddd;
+            }
+            .container {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>Panel de Control de Estadísticas</header>
+    <div class="container">
+        <aside>
+            <div class="section">
+                <h2>Crear Nueva Estadística</h2>
+                <label for="new_dataset_name">Nombre de la Estadística</label>
+                <input type="text" id="new_dataset_name" placeholder="Ej: ventas, peso, temperatura...">
+                <button id="create_dataset_btn">Crear</button>
+            </div>
+
+            <div class="section">
+                <h2>Agregar Registro</h2>
+                <label for="stat_select">Estadística</label>
+                <select id="stat_select"></select>
+
+                <label for="etiqueta">Etiqueta</label>
+                <input type="text" id="etiqueta" placeholder="Ej: día 1, semana 2">
+
+                <label for="valor">Valor</label>
+                <input type="text" id="valor" placeholder="Valor numérico">
+
+                <button id="add_record_btn">Agregar</button>
+            </div>
+
+            <div class="section">
+                <h2>Eliminar Registro</h2>
+                <label for="delete_stat_select">Estadística</label>
+                <select id="delete_stat_select"></select>
+
+                <label for="delete_label_select">Etiqueta</label>
+                <select id="delete_label_select"></select>
+
+                <button id="delete_record_btn">Eliminar</button>
+            </div>
+        </aside>
+        <main>
+            <h1>Todas las Estadísticas</h1>
+            <p class="info">Los gráficos disponibles se muestran a continuación:</p>
+            <div class="charts-grid" id="charts_grid">
+                <!-- Charts will be listed here via JS -->
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Load datasets into dropdowns
+        function loadDatasets() {
+            fetch('/datasets')
+            .then(response => response.json())
+            .then(data => {
+                const statSelect = document.getElementById('stat_select');
+                const deleteStatSelect = document.getElementById('delete_stat_select');
+
+                statSelect.innerHTML = '';
+                deleteStatSelect.innerHTML = '';
+
+                data.forEach(ds => {
+                    const option1 = document.createElement('option');
+                    option1.value = ds;
+                    option1.textContent = ds;
+                    statSelect.appendChild(option1);
+
+                    const option2 = document.createElement('option');
+                    option2.value = ds;
+                    option2.textContent = ds;
+                    deleteStatSelect.appendChild(option2);
+                });
+
+                // After loading datasets, also refresh the charts
+                loadCharts();
+
+                // Load labels for deletion dropdown if there's any dataset
+                if (data.length > 0) {
+                    loadLabelsForDataset(deleteStatSelect.value);
+                }
+            });
+        }
+
+        // Load all charts
+        function loadCharts() {
+            fetch('/datasets')
+            .then(response => response.json())
+            .then(datasets => {
+                const grid = document.getElementById('charts_grid');
+                grid.innerHTML = '';
+                datasets.forEach(ds => {
+                    const chartCard = document.createElement('div');
+                    chartCard.className = 'chart-card';
+
+                    const title = document.createElement('h3');
+                    title.textContent = ds;
+
+                    const img = document.createElement('img');
+                    // Add timestamp to force image refresh
+                    img.src = `/static/${ds}.png?ts=` + new Date().getTime(); 
+                    img.alt = `Gráfico de ${ds}`;
+
+                    chartCard.appendChild(title);
+                    chartCard.appendChild(img);
+                    grid.appendChild(chartCard);
+                });
+            });
+        }
+
+        // Load labels for a given dataset (for deletion)
+        function loadLabelsForDataset(dataset) {
+            fetch(`/labels_for_dataset?stat_name=${encodeURIComponent(dataset)}`)
+            .then(response => response.json())
+            .then(labels => {
+                const deleteLabelSelect = document.getElementById('delete_label_select');
+                deleteLabelSelect.innerHTML = '';
+                labels.forEach(label => {
+                    const opt = document.createElement('option');
+                    opt.value = label;
+                    opt.textContent = label;
+                    deleteLabelSelect.appendChild(opt);
+                });
+            });
+        }
+
+        document.getElementById('create_dataset_btn').onclick = function() {
+            const stat_name = document.getElementById('new_dataset_name').value.trim();
+            if(!stat_name) {
+                alert("Por favor ingresa un nombre de estadística.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('stat_name', stat_name);
+
+            fetch('/create_dataset', {method: 'POST', body: formData})
+            .then(response => response.json())
+            .then(data => {
+                if(data.error) {
+                    alert("Error: " + data.error);
+                } else {
+                    alert("Dataset creado con éxito: " + data.dataset);
+                    document.getElementById('new_dataset_name').value = '';
+                    loadDatasets();
+                }
+            })
+            .catch(err => console.error(err));
+        };
+
+        document.getElementById('add_record_btn').onclick = function() {
+            const stat_name = document.getElementById('stat_select').value;
+            const etiqueta = document.getElementById('etiqueta').value.trim();
+            const valor = document.getElementById('valor').value.trim();
+
+            if(!stat_name || !etiqueta || !valor) {
+                alert("Por favor llena todos los campos para agregar un registro.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('stat_name', stat_name);
+            formData.append('etiqueta', etiqueta);
+            formData.append('valor', valor);
+
+            fetch('/envia', {method: 'POST', body: formData})
+            .then(response => response.json())
+            .then(data => {
+                if(data.error) {
+                    alert("Error: " + data.error);
+                } else {
+                    document.getElementById('etiqueta').value = '';
+                    document.getElementById('valor').value = '';
+                    // Refresh charts after adding new record
+                    setTimeout(loadCharts, 500);
+                }
+            })
+            .catch(err => console.error(err));
+        };
+
+        document.getElementById('delete_stat_select').onchange = function() {
+            const dataset = this.value;
+            loadLabelsForDataset(dataset);
+        };
+
+        document.getElementById('delete_record_btn').onclick = function() {
+            const stat_name = document.getElementById('delete_stat_select').value;
+            const etiqueta = document.getElementById('delete_label_select').value;
+            if(!stat_name || !etiqueta) {
+                alert("Por favor selecciona la estadística y la etiqueta.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('stat_name', stat_name);
+            formData.append('etiqueta', etiqueta);
+
+            fetch('/delete_record', {method: 'POST', body: formData})
+            .then(response => response.json())
+            .then(data => {
+                if(data.error) {
+                    alert("Error: " + data.error);
+                } else {
+                    alert("Registro eliminado con éxito.");
+                    loadLabelsForDataset(stat_name);
+                    setTimeout(loadCharts, 500);
+                }
+            })
+            .catch(err => console.error(err));
+        };
+
+        // Load datasets and charts on page load
+        loadDatasets();
+    </script>
+</body>
+</html>

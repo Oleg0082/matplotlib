@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Panel de Control de Estadísticas</title>
+    <style>
+        body {
+            margin: 0; 
+            font-family: Arial, sans-serif;
+            background: #f7f7f7;
+            color: #333;
+        }
+
+        header {
+            background: #23282d;
+            color: #fff;
+            padding: 15px;
+            font-size: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logout-link {
+            color: #fff;
+            text-decoration: none;
+            font-size:14px;
+        }
+
+        .container {
+            display: flex;
+            min-height: calc(100vh - 50px);
+        }
+
+        aside {
+            width: 300px;
+            background: #fafafa;
+            border-right: 1px solid #ddd;
+            padding: 20px;
+        }
+
+        main {
+            flex: 1;
+            padding: 20px;
+        }
+
+        h1, h2, h3 {
+            margin-top: 0;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section h2 {
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input[type="text"], select, input[type="color"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc; 
+            border-radius: 3px;
+        }
+
+        button {
+            background: #0073aa;
+            color: #fff;
+            border: none;
+            padding: 8px 12px;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+
+        button:hover {
+            background: #006799;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .chart-card {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .chart-card h3 {
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .info {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        /* Modal Styles */
+        #modalOverlay {
+            position: fixed;
+            top:0; left:0;
+            width:100%; height:100%;
+            background: rgba(0,0,0,0.5);
+            display:none;
+            justify-content:center;
+            align-items:center;
+        }
+
+        #modalContent {
+            background:#fff;
+            padding:20px;
+            border-radius:5px;
+            position:relative;
+            max-width:80%;
+            max-height:80%;
+        }
+
+        #modalContent img {
+            max-width: 100%;
+            height:auto;
+            display:block;
+            margin:0 auto;
+        }
+
+        #closeModalBtn {
+            position:absolute;
+            top:10px; right:10px;
+            background:none;
+            border:none;
+            font-size:24px;
+            cursor:pointer;
+            color:#333;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            aside {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #ddd;
+            }
+            .container {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        Panel de Control de Estadísticas
+        <a class="logout-link" href="{{ url_for('logout') }}">Logout</a>
+    </header>
+    <div class="container">
+        <aside>
+            <div class="section">
+                <h2>Crear Nueva Estadística</h2>
+                <label for="new_dataset_name">Nombre de la Estadística</label>
+                <input type="text" id="new_dataset_name" placeholder="Ej: ventas, peso, temperatura...">
+
+                <label for="new_chart_type">Tipo de Gráfico</label>
+                <select id="new_chart_type">
+                    <option value="bar" selected>Bar</option>
+                    <option value="pie">Pie</option>
+                </select>
+
+                <div id="bar_color_section">
+                    <label for="new_chart_color">Color de las Barras</label>
+                    <input type="color" id="new_chart_color" value="#4CAF50">
+                </div>
+
+                <button id="create_dataset_btn">Crear</button>
+            </div>
+
+            <div class="section">
+                <h2>Agregar Registro</h2>
+                <label for="stat_select">Estadística</label>
+                <select id="stat_select"></select>
+
+                <label for="etiqueta">Etiqueta</label>
+                <input type="text" id="etiqueta" placeholder="Ej: día 1, semana 2">
+
+                <label for="valor">Valor</label>
+                <input type="text" id="valor" placeholder="Valor numérico">
+
+                <button id="add_record_btn">Agregar</button>
+            </div>
+
+            <div class="section">
+                <h2>Eliminar Registro</h2>
+                <label for="delete_stat_select">Estadística</label>
+                <select id="delete_stat_select"></select>
+
+                <label for="delete_label_select">Etiqueta</label>
+                <select id="delete_label_select"></select>
+
+                <button id="delete_record_btn">Eliminar</button>
+            </div>
+        </aside>
+        <main>
+            <h1>Todas las Estadísticas</h1>
+            <p class="info">Los gráficos disponibles se muestran a continuación:</p>
+            <div class="charts-grid" id="charts_grid">
+                <!-- Charts will be listed here via JS -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal -->
+    <div id="modalOverlay">
+        <div id="modalContent">
+            <button id="closeModalBtn">&times;</button>
+            <img id="modalImage" src="" alt="Ampliación del gráfico">
+        </div>
+    </div>
+
+    <script>
+        // Show/hide color input based on chart type
+        const chartTypeSelect = document.getElementById('new_chart_type');
+        const barColorSection = document.getElementById('bar_color_section');
+        chartTypeSelect.addEventListener('change', function() {
+            if (this.value === 'bar') {
+                barColorSection.style.display = 'block';
+            } else {
+                barColorSection.style.display = 'none';
+            }
+        });
+
+        function loadDatasets() {
+            fetch('/datasets')
+            .then(response => response.json())
+            .then(data => {
+                const statSelect = document.getElementById('stat_select');
+                const deleteStatSelect = document.getElementById('delete_stat_select');
+
+                statSelect.innerHTML = '';
+                deleteStatSelect.innerHTML = '';
+
+                data.forEach(ds => {
+                    const option1 = document.createElement('option');
+                    option1.value = ds;
+                    option1.textContent = ds;
+                    statSelect.appendChild(option1);
+
+                    const option2 = document.createElement('option');
+                    option2.value = ds;
+                    option2.textContent = ds;
+                    deleteStatSelect.appendChild(option2);
+                });
+
+                loadCharts();
+
+                if (data.length > 0) {
+                    loadLabelsForDataset(deleteStatSelect.value);
+                }
+            });
+        }
+
+        function loadCharts() {
+            fetch('/datasets')
+            .then(response => response.json())
+            .then(datasets => {
+                const grid = document.getElementById('charts_grid');
+                grid.innerHTML = '';
+                datasets.forEach(ds => {
+                    const chartCard = document.createElement('div');
+                    chartCard.className = 'chart-card';
+
+                    const title = document.createElement('h3');
+                    title.textContent = ds;
+
+                    const img = document.createElement('img');
+                    // Add timestamp to force image refresh
+                    img.src = `static/{{user_id}}_${ds}.png?ts=` + new Date().getTime(); 
+                    img.alt = `Gráfico de ${ds}`;
+                    img.style.maxWidth = '100%';
+
+                    chartCard.appendChild(title);
+                    chartCard.appendChild(img);
+                    grid.appendChild(chartCard);
+
+                    // Click to open modal
+                    chartCard.addEventListener('click', function() {
+                        showModal(`/{{user_id}}_${ds}.png?ts=` + new Date().getTime());
+                    });
+                });
+            });
+        }
+
+        function loadLabelsForDataset(dataset) {
+            fetch(`/labels_for_dataset?stat_name=${encodeURIComponent(dataset)}`)
+            .then(response => response.json())
+            .then(labels => {
+                const deleteLabelSelect = document.getElementById('delete_label_select');
+                deleteLabelSelect.innerHTML = '';
+                labels.forEach(label => {
+                    const opt = document.createElement('option');
+                    opt.value = label;
+                    opt.textContent = label;
+                    deleteLabelSelect.appendChild(opt);
+                });
+            });
+        }
+
+        document.getElementById('create_dataset_btn').onclick = function() {
+            const stat_name = document.getElementById('new_dataset_name').value.trim();
+            const chart_type = document.getElementById('new_chart_type').value;
+            let chart_color = document.getElementById('new_chart_color').value;
+
+            if(!stat_name) {
+                alert("Por favor ingresa un nombre de estadística.");
+                return;
+            }
+
+            if (chart_type !== 'bar' && chart_type !== 'pie') {
+                alert("Tipo de gráfico inválido.");
+                return;
+            }
+
+            if (chart_type === 'pie') {
+                chart_color = '';
+            }
+
+            const formData = new FormData();
+            formData.append('stat_name', stat_name);
+            formData.append('chart_type', chart_type);
+            formData.append('chart_color', chart_color);
+
+            fetch('/create_dataset', {method: 'POST', body: formData})
+            .then(response => response.json())
+            .then(data => {
+                if(data.error) {
+                    alert("Error: " + data.error);
+                } else {
+                    alert("Dataset creado con éxito: " + data.dataset);
+                    document.getElementById('new_dataset_name').value = '';
+                    loadDatasets();
+                }
+            })
+            .catch(err => console.error(err));
+        };
+
+        document.getElementById('add_record_btn').onclick = function() {
+            const stat_name = document.getElementById('stat_select').value;
+            const etiqueta = document.getElementById('etiqueta').value.trim();
+            const valor = document.getElementById('valor').value.trim();
+
+            if(!stat_name || !etiqueta || !valor) {
+                alert("Por favor llena todos los campos para agregar un registro.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('stat_name', stat_name);
+            formData.append('etiqueta', etiqueta);
+            formData.append('valor', valor);
+
+            fetch('/envia', {method: 'POST', body: formData})
+            .then(response => response.json())
+            .then(data => {
+                if(data.error) {
+                    alert("Error: " + data.error);
+                } else {
+                    document.getElementById('etiqueta').value = '';
+                    document.getElementById('valor').value = '';
+                    setTimeout(loadCharts, 500);
+                }
+            })
+            .catch(err => console.error(err));
+        };
+
+        document.getElementById('delete_stat_select').onchange = function() {
+            const dataset = this.value;
+            loadLabelsForDataset(dataset);
+        };
+
+        document.getElementById('delete_record_btn').onclick = function() {
+            const stat_name = document.getElementById('delete_stat_select').value;
+            const etiqueta = document.getElementById('delete_label_select').value;
+            if(!stat_name || !etiqueta) {
+                alert("Por favor selecciona la estadística y la etiqueta.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('stat_name', stat_name);
+            formData.append('etiqueta', etiqueta);
+
+            fetch('/delete_record', {method: 'POST', body: formData})
+            .then(response => response.json())
+            .then(data => {
+                if(data.error) {
+                    alert("Error: " + data.error);
+                } else {
+                    alert("Registro eliminado con éxito.");
+                    loadLabelsForDataset(stat_name);
+                    setTimeout(loadCharts, 500);
+                }
+            })
+            .catch(err => console.error(err));
+        };
+
+        // Modal logic
+        const modalOverlay = document.getElementById('modalOverlay');
+        const modalImage = document.getElementById('modalImage');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+
+        function showModal(imgSrc) {
+            modalImage.src = imgSrc;
+            modalOverlay.style.display = 'flex';
+        }
+
+        closeModalBtn.onclick = function() {
+            modalOverlay.style.display = 'none';
+        };
+
+        modalOverlay.onclick = function(e) {
+            if (e.target === modalOverlay) {
+                modalOverlay.style.display = 'none';
+            }
+        };
+
+        // Load datasets and charts on page load
+        loadDatasets();
+    </script>
+</body>
+</html>
