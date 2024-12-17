@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width">
+    <link rel="icon" type="image/svg+xml" href="logo.svg">
+    <title>jocarsa | maroon - Login</title>
+    <style>
+        body { font-family: Ubuntu, Arial, sans-serif; background: #f7f7f7; margin:0; padding:0; }
+        .container {
+            max-width: 300px; 
+            margin: 50px auto; 
+            background: #fff; 
+            padding:20px; 
+            border:1px solid #ddd; 
+            border-radius:5px;
+            text-align:center;
+        }
+        h1 { font-size:18px; margin-bottom:20px; }
+        input[type=text], input[type=password] {
+            width: 100%; 
+            padding:8px; 
+            margin-bottom:10px; 
+            border:1px solid #ccc; 
+            border-radius:3px;
+            box-sizing:border-box;
+        }
+        button {
+            background: maroon; color:#fff; border:none; padding:8px 12px; border-radius:3px; cursor:pointer;
+        }
+        button:hover { background:maroon; }
+        .error { color:red; margin-bottom:10px; }
+        .info { margin-top:10px; font-size:14px; }
+    </style>
+</head>
+<body>
+<div class="container">
+	<img src="logo.svg">
+    <h1>jocarsa | maroon</h1>
+    <h2>Iniciar Sesión</h2>
+    <div id="error_msg" class="error"></div>
+    <form id="login_form">
+        <input type="text" name="username" placeholder="Usuario" required>
+        <input type="password" name="password" placeholder="Contraseña" required>
+        <button type="submit">Login</button>
+    </form>
+    <div class="info">¿No tienes cuenta? <a href="signup.html">Regístrate</a></div>
+</div>
+
+<script>
+document.getElementById('login_form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    fetch('api.php?action=login', {method:'POST',body:formData})
+    .then(r=>r.json())
+    .then(d=>{
+        if(d.error) {
+            document.getElementById('error_msg').textContent = d.error;
+        } else {
+            window.location.href='index.html';
+        }
+    });
+});
+</script>
+</body>
+</html>
+
